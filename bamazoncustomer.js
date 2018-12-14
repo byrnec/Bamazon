@@ -3,6 +3,7 @@
 // require packages
 var mysql = require("mysql");
 var inquirer = require("inquirer");
+var Table = require('cli-table');
 
 // create connection
 var connection = mysql.createConnection({
@@ -16,106 +17,96 @@ var connection = mysql.createConnection({
 //initiate connection
 connection.connect(function (err) {
     if (err) throw err;
-    console.log("Connected as id " + connection.threadId + "\n");
+    // call main function
+    console.log('_.~"~._.~"~._.~Welcome to BAMazon~._.~"~._.~"~._');
+    console.log('----------------------------------------------------------------------------------------------------');
+    console.log("You are now connected to the Bamazon Store database as id " + connection.threadId);
     askBuyer();
-    console.log("hello world")
 });
 
 
 // in node-Running this application will first display all of the items available for sale. 
 // Include the ids, names, and prices of products for sale.
 
-var itemChoices = ["hey", "test"];
+// Prompt Customers Input
 
+
+// Begin Display Inventory in order to ask buyer for choice
 function askBuyer() {
-    inquirer
-        .prompt(
-            [{
-            name: "intro",
-            type: "list",
-            message: "Welcome to the Amazon node store, special prices reserved only for programmers!"
-        },
+    connection.query('SELECT * FROM products', function (err, res) {
+        if (err) throw err;
 
-            // The app should then prompt users with two messages.
-            // The first should ask them the ID of the product they would like to buy.
-
+        // Cli-Table display code with Color
+        var table = new Table(
             {
-                name: "id",
-                type: "input",
-                message: "What is the ID of the product you would like to buy?",
-                choices: itemChoices
-            },
-            // The second message should ask how many units of the product they would like to buy.
-
-            {
-                name: "quantity",
-                type: "input",
-                message: "How many units of the product would you like to buy?"
-
-            }
-        ])
-        .then(function (res) {
-            var query = "SELECT * FROM products ?";
-            connection.query(query, { id: res.id }, function (err, res) {
-                // Once the customer has placed the order, your application should check 
-                // if your store has enough of the product to meet the customer's request.
-
-                if (res.quantity > 0) {
-
-                    updateInventory();
-                    // getProducts();
-                }
-
-                // // If not, the app should log a phrase like Insufficient quantity!, 
-                // // and then prevent the order from going through.
-                // do nothing
-                else {
-                    console.log("Insufficient quantity!")
-                }
+                head: ["Product ID", "Product Name", "Department Name", "Price", "Quantity"],
+                colWidths: [12, 75, 20, 12, 12],
             });
-        });
-    }
 
-//      // reads the item list out   
-// function getProducts() {
-//                 var query = "SELECT * FROM products ?";
-//                 connection.query(query, { item: res.item }, function (err, res) {
-//                     for (var i = 0; i < res.length; i++) {
-//                         (itemChoices).push(res.item[i])
-//                         console.log("Product: " + res[i].id
-//                             + " || Department: " + res[i].department
-//                             + " || Price: " + res[i].price
-//                             + " || Quantity: " + res[i].quantity);
-//                     }
-//                 });
-//             }
+        // Loop through entire inventory
+        for (var i = 0; i < res.length; i++) {
+            table.push(
+                [res[i].id, res[i].name, res[i].department, parseFloat(res[i].price).toFixed(2), res[i].quantity]
+            );
+        }
 
-    
-// However, if your store does have enough of the product, you should fulfill the customer's order.
+        console.log(table.toString());
 
+        // The app should then prompt users with two messages.
+        // The first should ask them the ID of the product they would like to buy.
+        inquirer
+            .prompt([
 
-// This means updating the SQL database to reflect the remaining quantity.
-// Once the update goes through, show the customer the total cost of their purchase.
+                {
+                    type: "input",
+                    name: "id",
+                    message: "What is the ID of the product you would like to buy?"
+                },
+                {
+                    name: "quantity",
+                    type: "input",
+                    message: "How many units of the product would you like to buy?"
 
-// function updateInventory() {
-//     console.log("Updating all Rocky Road quantities...\n");
-//     var query = connection.query(
-//         "UPDATE products SET ? WHERE ?",
-//         [
-//             {
-//                 quantity: 100
-//             },
-//             {
-//                 id: res.id
-//             }
-//         ],
-//         function (err, res) {
-//             console.log(res.affectedRows + " products updated!\n");
-//             // Call deleteProduct AFTER the UPDATE completes
-//             deleteProduct();
-//         }
-//     );
+                },
+            ])
 
-//     // logs the actual query being run
-//     console.log(query.sql);
-// }
+            // Ordering function
+            .then(function (res) {
+
+                var item = res.id;
+                var quantity = res.quantity;
+
+                connection.query("SELECT * FROM products WHERE id =" + item, function (err, selectedItem) {
+
+                    // Query db to confirm that the given item ID exists in the desired quantity
+                    if (selectedItem[0].quantity - quantity >= 0) {
+
+                        console.log("INVENTORY AUDIT: Quantity in Stock: " + selectedItem[0].quantity + " Order Quantity: " + quantity);
+
+                        console.log("Congratulations! Bamazon has sufficient inventory of " + selectedItem[0].name + " to fill your order!");
+                    
+                    
+                    
+                        // Calculate total sale, and fix 2 decimal places
+                        console.log("Thank You for your purchase. Your order total will be " + (res.quantity * selectedItem[0].price).toFixed(2) + " dollars.", "\nThank you for shopping at Bamazon!");
+
+                        // Query to remove the purchased item from inventory.                       
+                        connection.query('UPDATE products SET quantity=? WHERE id=?', [selectedItem[0].quantity - quantity, id],
+
+                            function (err, inventory) {
+                                if (err) throw err;
+
+                                askBuyer();  // Runs the prompt again, so the customer can continue shopping.
+                            });  // Ends the code to remove item from inventory.
+
+                    }
+                    // Low inventory warning
+                    else {
+                        console.log("INSUFFICIENT INVENTORY ALERT: \nBamazon only has " + selectedItem[0].quantity + " " + selectedItem[0].name + " in stock at this moment. \nPlease make another selection or reduce your quantity.", "\nThank you for shopping at Bamazon!");
+
+                        askBuyer();  // Runs the prompt again, so the customer can continue shopping.
+                    }
+                });
+            });
+    });
+} 
