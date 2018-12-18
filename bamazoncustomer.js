@@ -36,14 +36,14 @@ function askBuyer() {
     connection.query('SELECT * FROM products', function (err, res) {
         if (err) throw err;
 
-        // Cli-Table display code with Color
+        // Cli-Table display code 
         var table = new Table(
             {
                 head: ["Product ID", "Product Name", "Department Name", "Price", "Quantity"],
                 colWidths: [12, 75, 20, 12, 12],
             });
 
-        // Loop through entire inventory
+        // Loop through the entire inventory
         for (var i = 0; i < res.length; i++) {
             table.push(
                 [res[i].id, res[i].name, res[i].department, parseFloat(res[i].price).toFixed(2), res[i].quantity]
@@ -77,7 +77,7 @@ function askBuyer() {
                 var quantity = res.quantity;
 
                 connection.query("SELECT * FROM products WHERE id =" + item, function (err, selectedItem) {
-
+                    if (err) throw err;
                     // Query db to confirm that the given item ID exists in the desired quantity
                     if (selectedItem[0].quantity - quantity >= 0) {
 
@@ -91,7 +91,7 @@ function askBuyer() {
                         console.log("Thank You for your purchase. Your order total will be " + (res.quantity * selectedItem[0].price).toFixed(2) + " dollars.", "\nThank you for shopping at Bamazon!");
 
                         // Query to remove the purchased item from inventory.                       
-                        connection.query('UPDATE products SET quantity=? WHERE id=?', [selectedItem[0].quantity - quantity, id],
+                        connection.query('UPDATE products SET quantity=? WHERE id=?', [selectedItem[0].quantity - quantity, item],
 
                             function (err, inventory) {
                                 if (err) throw err;
