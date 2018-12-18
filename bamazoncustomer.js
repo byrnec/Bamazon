@@ -28,7 +28,7 @@ connection.connect(function (err) {
 // in node-Running this application will first display all of the items available for sale. 
 // Include the ids, names, and prices of products for sale.
 
-// Prompt Customers Input
+// Receive Customers Input
 
 
 // Begin Display Inventory in order to ask buyer for choice
@@ -70,7 +70,7 @@ function askBuyer() {
                 },
             ])
 
-            // Ordering function
+            // Order function begins 
             .then(function (res) {
 
                 var item = res.id;
@@ -81,30 +81,33 @@ function askBuyer() {
                     // Query db to confirm that the given item ID exists in the desired quantity
                     if (selectedItem[0].quantity - quantity >= 0) {
 
-                        console.log("INVENTORY AUDIT: Quantity in Stock: " + selectedItem[0].quantity + " Order Quantity: " + quantity);
+                        console.log("Checking Inventory.....loading... Quantity in Stock: " + selectedItem[0].quantity + " Customer Order Quantity: " + quantity);
 
-                        console.log("Congratulations! Bamazon has sufficient inventory of " + selectedItem[0].name + " to fill your order!");
-                    
-                    
-                    
-                        // Calculate total sale, and fix 2 decimal places
-                        console.log("Thank You for your purchase. Your order total will be " + (res.quantity * selectedItem[0].price).toFixed(2) + " dollars.", "\nThank you for shopping at Bamazon!");
+                        console.log("GREAT NEWS! Bamazon has sufficient inventory of " + selectedItem[0].name + ".  We will fill your order now!");
 
-                        // Query to remove the purchased item from inventory.                       
+
+
+                        // Calculate total sale
+                        // set sale to two decimals
+                        console.log("Thank you for shopping the Node Bamazon Store. Your order total will be " + (res.quantity * selectedItem[0].price).toFixed(2) + " dollars.", "\nFeel free to continue shopping!");
+
+                        // Decrement the inventory of the purchased item, so it is reflected for the future                    
                         connection.query('UPDATE products SET quantity=? WHERE id=?', [selectedItem[0].quantity - quantity, item],
 
                             function (err, inventory) {
                                 if (err) throw err;
+                                // run customer input prompt again
+                                askBuyer();
 
-                                askBuyer();  // Runs the prompt again, so the customer can continue shopping.
-                            });  // Ends the code to remove item from inventory.
+
+                            });
 
                     }
-                    // Low inventory warning
+                    // can't fullfill order
                     else {
-                        console.log("INSUFFICIENT INVENTORY ALERT: \nBamazon only has " + selectedItem[0].quantity + " " + selectedItem[0].name + " in stock at this moment. \nPlease make another selection or reduce your quantity.", "\nThank you for shopping at Bamazon!");
-
-                        askBuyer();  // Runs the prompt again, so the customer can continue shopping.
+                        console.log("Bad News--INSUFFICIENT INVENTORY: \n Unfortunately, Bamazon only has " + selectedItem[0].quantity + " " + selectedItem[0].name + " in stock. \nPlease make another selection or reduce your quantity.", "\nWe appreciate your business with Bamazon!");
+                        // run customer input prompt again
+                        askBuyer();
                     }
                 });
             });
