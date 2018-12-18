@@ -5,7 +5,7 @@
 ## Purpose of the game
 
 This is a command line app that allows you to purchase one of the 
-items in this store by typing in the item ID and the desired quantity based on a give list of inventory. If the selected quantity is in stock, the user's order is fulfilled, displaying the total purchase price and updating the store database. If the desired quantity is unavailable, the user is asked to modify their order. The prompt to purchase another item is then displayed.
+items in this store by typing in the item ID and the desired quantity based on a given list of inventory. If the selected quantity is in stock, the user's order is fulfilled, displaying the total purchase price and updating the store database. If the desired quantity is unavailable, the user is asked to modify their order. The prompt to purchase another item is then displayed.
 
 
 ## Getting Started
